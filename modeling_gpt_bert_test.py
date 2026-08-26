@@ -1,3 +1,9 @@
+"""
+Minor modifications to loading script found here: https://huggingface.co/BabyLM-community/babylm-baseline-100m-gpt-bert-causal-focus/blob/main/modeling_gpt_bert.py
+Just added this line to GPTBERTForCausalLM: return_dict = True if return_dict is None else return_dict and same for MaskedLM
+This ensures the output is in the format minicons expects
+"""
+
 from __future__ import annotations
 
 import math

@@ -1,3 +1,6 @@
+"""
+Minor modifications to original: https://huggingface.co/BabyLM-community/babylm-baseline-100m-gpt-bert-causal-focus/blob/main/configuration_gpt_bert.py
+"""
 from __future__ import annotations
 
 import json
