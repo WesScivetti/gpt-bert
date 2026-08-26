@@ -6,11 +6,9 @@ from modeling_gpt_bert_test import GPTBERTForMaskedLM, GPTBERTForCausalLM
 from configuration_gpt_bert import ModelConfig
 
 def fix_broken_keys_and_load(model_path, state_dict_name="pytorch_model.bin", causal_lm=True):
-    """Load a legacy local checkpoint or a packaged Hugging Face Hub model.
+    """Load a local checkpoint or a packaged Hugging Face Hub model.
 
-    Local directories retain the original key-repair behavior when the old
-    state dict is present. Hub model IDs load through the custom AutoClass
-    metadata added by ``upload_models_to_hub.py``.
+    If loading a local checkpoint, ensures that there are no key mismatches between actual model and expectations from config.
     """
     if os.path.isdir(model_path):
         state_dict_path = os.path.join(model_path, state_dict_name)
