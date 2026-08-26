@@ -30,41 +30,41 @@ if int(os.environ.get("SLURM_PROCID", 0)) == 0:
 def parse_arguments():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--train_path", default="../data/switchboard_tokenized.bin", type=Path, help="Path to the training data.")
+    parser.add_argument("--train_path", default="../data/train_random_short_tokenized_tokenized.bin", type=Path, help="Path to the training data.")
     parser.add_argument("--valid_path", default="../data/switchboard_tokenized.bin", type=Path, help="Path to the validation data.")
-    parser.add_argument("--name", default="hybrid_100M", type=str, help="Name of the run.")
+    parser.add_argument("--name", default="hybrid_100M_short_adam", type=str, help="Name of the run.")
     parser.add_argument("--wandb_project", default="NPN_Fict", type=str, help="Name of the WandB project to log into.")
     parser.add_argument("--wandb_entity", default="wss37", type=str, help="The entity to log to on WandB (typically your wandb username).")
-    parser.add_argument("--config_file", default="../configs/tiny.json", type=Path, help="The BERT model config")
-    parser.add_argument("--tokenizer_path", default="../tokenizers/tokenizer_100M_sb.json", type=Path, help="Path to the tokenizer.")
+    parser.add_argument("--config_file", default="../configs/base.json", type=Path, help="The BERT model config")
+    parser.add_argument("--tokenizer_path", default="../tokenizers/baseline_short.json", type=Path, help="Path to the tokenizer.")
     parser.add_argument("--output_dir", default="../model_checkpoints", type=Path, help="The output directory where the model checkpoints will be written.")
     parser.add_argument("--checkpoint_filename", default=None, type=Path, help="The checkpoint filename to resume training.")
-    parser.add_argument("--optimizer", default="lamb", type=str, help="The optimizer to use.")
-    parser.add_argument("--hybrid_numerator", default=15, type=int, help="The numerator of the hybrid ratio.")
-    parser.add_argument("--hybrid_denominator", default=16, type=int, help="The denominator of the hybrid ratio (the number of GPUs should be divisible by this number).")
+    parser.add_argument("--optimizer", default="adamw", type=str, help="The optimizer to use.")
+    parser.add_argument("--hybrid_numerator", default=10, type=int, help="The numerator of the hybrid ratio.")
+    parser.add_argument("--hybrid_denominator", default=20, type=int, help="The denominator of the hybrid ratio (the number of GPUs should be divisible by this number).")
     parser.add_argument("--seq_length", default=128, type=int, help="Sequence length for training.")
     parser.add_argument("--local_batch_size", default=256, type=int, help="Batch size for training per GPU.")
     parser.add_argument("--global_batch_size", default=256, type=int, help="Total batch size for training per GPUs and per grad accumulation step.")
     parser.add_argument("--batch_reduction", default=1, type=int, help="The initial batch size reduction factor.")
-    parser.add_argument("--learning_rate", default=1e-2, type=float, help="The initial learning rate for Adam.")
-    parser.add_argument("--max_steps", default=31_250 // 2, type=int, help="Total number of training steps to perform.")
+    parser.add_argument("--learning_rate", default=3e-4, type=float, help="The initial learning rate for Adam.")
+    parser.add_argument("--max_steps", default=120_000 // 2, type=int, help="Total number of training steps to perform.")
     parser.add_argument("--ema_decay", default=0.999, type=float, help="Exponential moving average decay.")
-    parser.add_argument("--validate_every", default=1_000, type=int, help="Run validation after every X training shards.")
-    parser.add_argument("--validation_steps", default=1, type=int, help="Number of validation steps.")
-    parser.add_argument("--log_stats_every", default=100, type=int, help="Log stats every X steps.")
-    parser.add_argument("--warmup_proportion", default=0.016, type=float, help="Proportion of training to perform linear learning rate warmup for. E.g., 0.1 = 10%% of training.")
-    parser.add_argument("--cooldown_proportion", default=0.016, type=float, help="Proportion of training to perform linear learning rate cooldown for. E.g., 0.1 = 10%% of training.")
-    parser.add_argument('--seed', type=int, default=42, help="random seed for initialization")
-    parser.add_argument('--save_every', type=int, default=1_000, help="save every X steps")
-    parser.add_argument("--mask_p_start", default=0.3, type=float, help="Initial masking probability.")
+    parser.add_argument("--validate_every", default=6_000, type=int, help="Run validation after every X training shards.")
+    parser.add_argument("--validation_steps", default=16, type=int, help="Number of validation steps.")
+    parser.add_argument("--log_stats_every", default=6000, type=int, help="Log stats every X steps.")
+    parser.add_argument("--warmup_proportion", default=0.06, type=float, help="Proportion of training to perform linear learning rate warmup for. E.g., 0.1 = 10%% of training.")
+    parser.add_argument("--cooldown_proportion", default=0.1, type=float, help="Proportion of training to perform linear learning rate cooldown for. E.g., 0.1 = 10%% of training.")
+    parser.add_argument('--seed', type=int, default=1, help="random seed for initialization")
+    parser.add_argument('--save_every', type=int, default=6_000, help="save every X steps")
+    parser.add_argument("--mask_p_start", default=0.2, type=float, help="Initial masking probability.")
     parser.add_argument("--mask_p_end", default=0.15, type=float, help="Final masking probability.")
     parser.add_argument("--mask_random_p", default=0.1, type=float, help="Probability of replacing the masked token with a random token.")
     parser.add_argument("--mask_keep_p", default=0.1, type=float, help="Probability of keeping the masked token.")
-    parser.add_argument("--weight_decay", default=0.1, type=float, help="Weight decay if we apply some.")
+    parser.add_argument("--weight_decay", default=0.01, type=float, help="Weight decay if we apply some.")
     parser.add_argument("--optimizer_eps", default=1e-8, type=float, help="Optimizer epsilon.")
     parser.add_argument("--optimizer_beta1", default=0.9, type=float, help="Optimizer beta1.")
     parser.add_argument("--optimizer_beta2", default=0.98, type=float, help="Optimizer beta2.")
-    parser.add_argument("--max_gradient", default=2.0, type=float, help="Max value for gradient clipping.")
+    parser.add_argument("--max_gradient", default=1.0, type=float, help="Max value for gradient clipping.")
     parser.add_argument('--mixed_precision', default=True, action=argparse.BooleanOptionalAction, help="Mixed precision training.")
     parser.add_argument('--n_special_tokens', default=16, type=int, help="Number of special tokens.")
     parser.add_argument('--z_loss_weight', default=1e-4, type=float, help="Weight for the z loss.")
@@ -79,6 +79,7 @@ def parse_arguments():
 
 def setup_training(args, tokenizer):
     assert torch.cuda.is_available()
+    print("seeding")
     seed_everything(args.seed)
 
     args.device = torch.device("cuda")
@@ -96,6 +97,7 @@ def setup_training(args, tokenizer):
 
 
 def load_config(args):
+    print("loading config")
     with args.config_file.open("r") as f:
         config = json.load(f)
     for k, v in config.items():
@@ -105,6 +107,7 @@ def load_config(args):
 
 def prepare_model_and_optimizer(args):
     args = load_config(args)
+    print("loading model")
     model = Bert(args)
 
     n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -249,11 +252,11 @@ def load_dataset(args, tokenizer, epoch, global_step, train_dataloader, mode="ma
         ratio = 1 - (args.hybrid_numerator / args.hybrid_denominator)
 
     if (global_step + 1) / args.max_steps >= 0.9:
-        seq_length = args.seq_length * 4
-        global_batch_size = args.global_batch_size // 4
+        seq_length = args.seq_length
+        global_batch_size = args.global_batch_size
     elif (global_step + 1) / args.max_steps >= 0.7:
-        seq_length = args.seq_length * 2
-        global_batch_size = args.global_batch_size // 2
+        seq_length = args.seq_length
+        global_batch_size = args.global_batch_size
     else:
         seq_length = args.seq_length
         global_batch_size = args.global_batch_size
@@ -288,8 +291,6 @@ def load_dataset(args, tokenizer, epoch, global_step, train_dataloader, mode="ma
         drop_last=True,
         pin_memory=True,
     )
-
-    return train_dataloader
 
     return train_dataloader
 
@@ -366,7 +367,7 @@ def training_epoch(model, ema_model, train_dataloader, valid_dataloader, optimiz
     optimizer.zero_grad(set_to_none=True)
 
     # calculate the number of steps to perform in this epoch
-    print("length of the train dataloader:", len(train_dataloader))
+    print("length of train_dataloader", len(train_dataloader))
     num_steps = min(len(train_dataloader), args.max_steps - global_step)
 
     # initialize the dataloader and the metrics
@@ -387,9 +388,9 @@ def training_epoch(model, ema_model, train_dataloader, valid_dataloader, optimiz
             attention_mask = full_attention_mask[start:start+args.local_batch_size]
             target_ids = full_target_ids[:, start:start+args.local_batch_size]
 
-            # forward pass, do a more detailed check of the model every 100 steps
+            # forward pass, do a more detailed check of the model every 6000 steps
             with torch.cuda.amp.autocast(args.mixed_precision, dtype=torch.bfloat16):
-                with ModelLogger(enable=global_step % 100 == 0, module=model):
+                with ModelLogger(enable=global_step % 6000 == 0, module=model):
                     loss, accuracy, z_loss, num_tokens = model(input_ids, attention_mask, target_ids)
 
             # calculate the weight for the loss (either token-weighted or not)
@@ -546,9 +547,9 @@ def training(model, ema_model, masked_train_dataloader, causal_train_dataloader,
             attention_mask = full_attention_mask[start:start+args.local_batch_size]
             target_ids = full_target_ids[:, start:start+args.local_batch_size]
 
-            # forward pass, do a more detailed check of the model every 100 steps
+            # forward pass, do a more detailed check of the model every 6000 steps
             with torch.cuda.amp.autocast(args.mixed_precision, dtype=torch.bfloat16):
-                with ModelLogger(enable=global_step % 100 == 0, module=model):
+                with ModelLogger(enable=global_step % 6000 == 0, module=model):
                     loss, masked_loss, causal_loss, accuracy, masked_accuracy, causal_accuracy, z_loss, num_tokens = model(input_ids, attention_mask, target_ids, num_masked, args.ratio)
 
             # calculate the weight for the loss
@@ -630,19 +631,22 @@ def training(model, ema_model, masked_train_dataloader, causal_train_dataloader,
 
         # Exiting the training due to hitting max steps
         if global_step >= args.max_steps:
-            return global_step
+            return global_step, masked_epoch, causal_epoch
 
     return global_step, masked_epoch, causal_epoch
 
 
 if __name__ == "__main__":
     args = parse_arguments()
-
+    print("loading tokenizer")
     tokenizer = Tokenizer.from_file(str(args.tokenizer_path))
+    print("setup training")
     setup_training(args, tokenizer)
+    print("preparing model")
     model, ema_model, optimizer, scheduler, global_step, start_epoch = prepare_model_and_optimizer(args)
-
+    print("loading data")
     masked_train_dataloader, causal_train_dataloader, valid_dataloader = init_datasets(args, tokenizer)
+    print("data loaded!")
     if args.ratio != 1 and args.ratio != 0:
         global_step, masked_epoch, causal_epoch = training(model, ema_model, masked_train_dataloader, causal_train_dataloader, valid_dataloader, optimizer, scheduler, global_step, args)
     elif args.ratio == 1:
