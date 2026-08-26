@@ -40,7 +40,7 @@ Two issues were encountered while loading trained models:
 
 ## Evaluating
 
-The included [`predict_blimp.py`](predict_blimp.py) provides an example of how to load and evaluate a model on BLiMP using minicons causalLM scorer. Because of how GPT-BERT does MNTP instead of pure MLM, the minicons Masked scorer won't work as intended. 
+The included [`predict_blimp.py`](predict_blimp.py) provides an example of how to load and evaluate a model on BLiMP using minicons causalLM scorer. While the code technically will load a masked LM scorer, because of how GPT-BERT does MNTP instead of pure MLM, the minicons Masked scorer won't work as intended. 
 
 ## Original GPT-BERT citation
 ```bibtex
